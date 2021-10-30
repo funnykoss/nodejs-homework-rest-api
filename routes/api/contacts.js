@@ -1,15 +1,49 @@
+const createError = require("http-errors");
 const express = require("express");
-const contactsOperations = require("../../model/contacts");
 const router = express.Router();
 
+const {
+  listContacts,
+  getContactById,
+  removeContact,
+  addContact,
+} = require("../../model/contacts");
+
 router.get("/", async (req, res, next) => {
-  const contacts = await contactsOperations.listContacts();
-  console.log(contacts);
-  res.json(contacts);
+  try {
+    const contacts = await listContacts();
+    res.json(contacts);
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get("/:contactId", async (req, res, next) => {
-  res.json({ message: "template message" });
+  try {
+    const { contactId } = req.params;
+    const result = await getContactById(contactId);
+    if (!result) {
+      throw new createError(404, `Product with id=${contactId} not found`);
+      // const error = new Error(`Product with id=${contactId} not found`);
+      // error.status = 404;
+      // throw error;
+      // res.status(404).json({
+      //   status: "error",
+      //   code: 404,
+      //   message: `Product with id=${contactId} not found`,
+      // });
+      // return;
+    }
+    res.json({
+      status: "success",
+      code: 200,
+      data: {
+        result,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.post("/", async (req, res, next) => {
