@@ -1,6 +1,6 @@
 const express = require("express");
-const { NotFound, BadRequest } = require("http-errors");
 const router = express.Router();
+const { NotFound, BadRequest } = require("http-errors");
 const joiSchema = require("./joiSchema");
 
 const {
@@ -8,12 +8,20 @@ const {
   getContactById,
   removeContact,
   addContact,
+  updateContacts,
+  updateById,
 } = require("../../model/contacts");
 
-router.get("/", async (_, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
-    const contacts = await listContacts();
-    res.json(contacts);
+    const result = await listContacts();
+    res.json({
+      status: "success",
+      code: 200,
+      data: {
+        result,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -24,7 +32,7 @@ router.get("/:contactId", async (req, res, next) => {
     const { contactId } = req.params;
     const result = await getContactById(contactId);
     if (!result) {
-      throw new NotFound(`Product with id=${contactId} not found`);
+      throw new NotFound(`Contact with id=${contactId} is not found`);
     }
     res.json({
       status: "success",
@@ -62,12 +70,12 @@ router.delete("/:contactId", async (req, res, next) => {
     const { contactId } = req.params;
     const result = await removeContact(contactId);
     if (!result) {
-      throw new createError(404, `Product with id=${contactId} not found`);
+      throw new NotFound(`Contact with id=${contactId} is not found`);
     }
     res.json({
       status: "success",
       code: 200,
-      message: "contact deleted",
+      message: "Remove success",
     });
   } catch (error) {
     next(error);
