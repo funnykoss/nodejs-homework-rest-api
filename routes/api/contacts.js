@@ -82,8 +82,27 @@ router.delete("/:contactId", async (req, res, next) => {
   }
 });
 
-// router.patch("/:contactId", async (req, res, next) => {
-//   res.json({ message: "template message" });
-// });
+router.put("/:contactId", async (req, res, next) => {
+  try {
+    const { error } = joiSchema.validate(req.body);
+    if (error) {
+      throw new BadRequest(error.message);
+    }
+    const { contactId } = req.params;
+    const result = await updateById(contactId, req.body);
+    if (!result) {
+      throw new NotFound(`Contact with id=${contactId} is not found`);
+    }
+    res.json({
+      status: "success",
+      code: 200,
+      data: {
+        result,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;
