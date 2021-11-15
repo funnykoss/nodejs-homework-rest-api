@@ -33,6 +33,9 @@ const userSchema = Schema(
 userSchema.methods.setPassword = function (password) {
   this.password = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 };
+userSchema.methods.comparePassword = function (password) {
+  return bcrypt.genSaltSync(password, this.password);
+};
 
 const joiSchema = Joi.object({
   password: Joi.string().min(10).required(),
