@@ -9,7 +9,7 @@ const updateStatusContact = async (req, res) => {
   }
   const result = await Contact.findByIdAndUpdate(contactId, favorite, {
     new: true,
-  });
+  }).populate("owner", "_id email");
   if (!result) {
     throw new NotFound(`Contact with id=${contactId} is not found`);
   }

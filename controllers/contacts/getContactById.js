@@ -4,7 +4,10 @@ const { NotFound } = require("http-errors");
 
 const getContactById = async (req, res) => {
   const { contactId } = req.params;
-  const result = await Contact.findById(contactId);
+  const result = await Contact.findById(contactId).populate(
+    "owner",
+    "_id email",
+  );
   if (!result) {
     throw new NotFound(`Contact with id=${contactId} is not found`);
   }
