@@ -1,47 +1,46 @@
-const { User } = require("../../models");
 const fs = require("fs/promises");
 const path = require("path");
-const { NotFound } = require("http-errors");
-const userDir = path.join(__dirname, "../../", "public/avatars");
+const { Unauthorized } = require("http-errors");
+const { User } = require("../../models");
+const userDir = path.join(__dirname, "../../public/avatars");
 const Jimp = require("jimp");
 
 const updateAvatar = async (req, res) => {
-  const { id } = req.params;
+  const { token, _id } = req.user;
+  const id = String(_id);
+
   const { path: tempUpload, originalname } = req.file;
-
   try {
-    const filename = `${id}_${date}_${originalname}`;
-    const resultUpload = path.join(productsDir, id, filename);
-    await fs.rename(tempUpload, resultUpload);
-    const avatar = path.join("/avatars", id, filename);
+    const resultUpload = path.join(userDir, id, `${id}_${originalname}`);
 
+    await fs.rename(tempUpload, resultUpload);
     await Jimp.read(resultUpload)
-      .then((avatar) => {
-        return avatar.resize(250, 250).write(resultUpload);
+      .then((image) => {
+        return image.resize(250, 250).write(resultUpload);
       })
       .catch((err) => {
         throw new Error(err.message);
       });
+    const image = path.join("/avatars", id, `${id}_${originalname}`);
 
-    const result = await User.findByIdAndUpdate(
-      id,
-      { avatarURL: avatar },
-      { new: true },
-    );
-    if (!result) {
-      throw NotFound(`Product with id=${id} not found`);
+    const user = await User.findOneAndUpdate({ token }, { avatarURL: image });
+
+    if (!user) {
+      throw new Unauthorized("Not authorized");
     }
+    const { avatarURL } = user;
 
-    res.status(200).json({
+    res.json({
       status: "success",
       code: 200,
       data: {
-        result,
+        avatarURL,
       },
     });
   } catch (error) {
-    await fs.unlink(tmpDir);
+    await fs.unlink(tempUpload);
+    throw error;
   }
 };
 
-module.exports = updateAvatar;
+module.exports = { updateAvatar };

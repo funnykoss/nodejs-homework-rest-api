@@ -11,7 +11,7 @@ const signup = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (user) {
-    throw new Conflict(`User with email=${email} allready exist`);
+    throw new Conflict(`User with email=${email} already exist`);
   }
   const defaultAvatar = await gravatar.url(email, { s: "250" }, true);
   const newUser = new User({ email, avatarURL: defaultAvatar });

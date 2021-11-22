@@ -5,7 +5,7 @@ const {
   controllerWrapper,
   upload,
 } = require("../../middlewares");
-const { auth: ctrl } = require("../../controllers");
+const { auth: ctrl, updateAvatar } = require("../../controllers");
 const { joiSchema } = require("../../models/user");
 
 const router = express.Router();
@@ -19,7 +19,8 @@ router.get("/logout", authenticate, controllerWrapper(ctrl.logout));
 router.get("/logout", authenticate, controllerWrapper(ctrl.current));
 
 router.patch(
-  "/:id/image",
+  "/avatars",
+  authenticate,
   upload.single("image"),
   controllerWrapper(ctrl.updateAvatar),
 );
