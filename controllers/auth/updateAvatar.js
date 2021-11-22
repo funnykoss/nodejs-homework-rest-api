@@ -31,7 +31,7 @@ const updateAvatar = async (req, res) => {
     if (!result) {
       throw NotFound(`Product with id=${id} not found`);
     }
-    const { avatarURL } = result;
+
     res.status(200).json({
       status: "success",
       code: 200,
