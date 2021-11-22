@@ -1,46 +1,35 @@
 const fs = require("fs/promises");
 const path = require("path");
-const { Unauthorized } = require("http-errors");
-const { User } = require("../../models");
-const userDir = path.join(__dirname, "../../public/avatars");
 const Jimp = require("jimp");
 
-const updateAvatar = async (req, res) => {
-  const { token, _id } = req.user;
-  const id = String(_id);
+const { User } = require("../../models");
 
-  const { path: tempUpload, originalname } = req.file;
+const avatarsDir = path.join(__dirname, "../../", "public/avatars");
+
+const updateAvatars = async (req, res) => {
+  console.log(req.user._id);
+  const { _id: id } = req.user;
+  const { path: tempPath, originalname } = req.file;
+  const uploadPath = path.join(avatarsDir, `${id}`, originalname);
   try {
-    const resultUpload = path.join(userDir, id, `${id}_${originalname}`);
+    const file = await Jimp.read(tempPath);
+    await file.resize(250, 250).write(tempPath);
 
-    await fs.rename(tempUpload, resultUpload);
-    await Jimp.read(resultUpload)
-      .then((image) => {
-        return image.resize(250, 250).write(resultUpload);
-      })
-      .catch((err) => {
-        throw new Error(err.message);
-      });
-    const image = path.join("/avatars", id, `${id}_${originalname}`);
+    await fs.rename(tempPath, uploadPath);
+    const avatar = `/avatars/${id}/${originalname}`;
+    await User.findByIdAndUpdate(id, { avatarURL: avatar });
 
-    const user = await User.findOneAndUpdate({ token }, { avatarURL: image });
-
-    if (!user) {
-      throw new Unauthorized("Not authorized");
-    }
-    const { avatarURL } = user;
-
-    res.json({
+    res.status(201).json({
       status: "success",
       code: 200,
       data: {
-        avatarURL,
+        result: avatar,
       },
     });
   } catch (error) {
-    await fs.unlink(tempUpload);
+    await fs.unlink(tempPath);
     throw error;
   }
 };
 
-module.exports = { updateAvatar };
+module.exports = updateAvatars;
