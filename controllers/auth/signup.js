@@ -2,6 +2,8 @@ const { Conflict } = require("http-errors");
 const gravatar = require("gravatar");
 const fs = require("fs/promises");
 const path = require("path");
+const { nanoid } = require("nanoid");
+const { sendEmail } = require("../../helpers");
 
 const { User } = require("../../models");
 
@@ -14,9 +16,23 @@ const signup = async (req, res) => {
     throw new Conflict(`User with email=${email} already exist`);
   }
   const defaultAvatar = await gravatar.url(email, { s: "250" }, true);
-  const newUser = new User({ email, avatarURL: defaultAvatar });
+  const verificationToken = nanoid();
+  const newUser = new User({
+    email,
+    avatarURL: defaultAvatar,
+    verificationToken,
+  });
   newUser.setPassword(password);
   await newUser.save();
+  const mail = {
+    to: email,
+    subject: "Подтверждение регистрации на сайте",
+    html: `
+        <a target="_blank" 
+            href="http://localhost:3000/api/auth/verify/${verificationToken}">Нажмите для подтверждения email</a>
+        `,
+  };
+  sendEmail(mail);
   const dirPath = path.join(avatarsDir, String(newUser._id));
   await fs.mkdir(dirPath);
   res.status(201).json({
