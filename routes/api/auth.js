@@ -17,4 +17,6 @@ router.get("/logout", authenticate, controllerWrapper(ctrl.logout));
 
 router.get("/logout", authenticate, controllerWrapper(ctrl.current));
 
+router.get("/verify/:verificationToken", controllerWrapper(ctrl.verify));
+
 module.exports = router;

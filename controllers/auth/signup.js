@@ -1,5 +1,7 @@
 const { Conflict } = require("http-errors");
+const { nanoid } = require("nanoid");
 const { User } = require("../../models");
+const { sendEmail } = require("../../utils");
 
 const signup = async (req, res) => {
   const { email, password } = req.body;
@@ -7,16 +9,21 @@ const signup = async (req, res) => {
   if (user) {
     throw new Conflict(`User with email=${email} allready exist`);
   }
-  const newUser = new User({ email });
+  const verificationToken = nanoid();
+  const newUser = new User({ email, verificationToken });
   newUser.setPassword(password);
   await newUser.save();
+  const mail = {
+    to: email,
+    subject: "Подтверждение регистрации",
+    html: `<a target="_blank"
+    href="http://localhost:3000/api/verify/${verificationToken}">Нажмите для подтверждения email</a>`,
+  };
+  await sendEmail(mail);
   res.status(201).json({
     status: "success",
     code: 201,
-    user: {
-      email: "example@example.com",
-      subscription: "starter",
-    },
+    message: "Register success",
   });
 };
 module.exports = signup;
